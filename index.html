@@ -275,10 +275,16 @@ function drawCard(){
 
   ctx.textAlign='left';ctx.textBaseline='alphabetic';ctx.fillStyle=t.text;
   ctx.font=`700 27px "GangwonEduAll"`;
-  ctx.fillText('생일:',170,632);
-  ctx.fillText('입양:',170,672);
-  ctx.fillText(birthday,240,632);
-  ctx.fillText(adoption,240,672);
+
+  // 같은 GangwonEduAll 글자 모양을 유지하면서 약간 더 두껍게 표현
+  const drawDateBold=(text,x,y)=>{
+    ctx.fillText(text,x,y);
+    ctx.fillText(text,x+0.6,y);
+  };
+  drawDateBold('생일:',172,632);
+  drawDateBold('입양:',172,672);
+  drawDateBold(birthday,242,632);
+  drawDateBold(adoption,242,672);
 
   // 테마별로 색이 바뀌는 장식 PNG
   drawThemeDecor();
