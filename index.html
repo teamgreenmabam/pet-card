@@ -106,7 +106,7 @@
 
     <section class="panel canvas-wrap">
       <div class="tip">사진을 넣은 뒤 원형 사진 안을 마우스 또는 손가락으로 끌면 위치를 옮길 수 있어요.</div>
-      <canvas id="card" width="520" height="780"></canvas>
+      <canvas id="card" width="450" height="750"></canvas>
     </section>
   </div>
 </main>
@@ -228,11 +228,17 @@ function drawCard(){
   const birthday=birthdayInput.value.trim()||'--.--.--';
   const adoption=adoptionInput.value.trim()||'--.--.--';
 
-  ctx.clearRect(0,0,520,780);
-  ctx.fillStyle='#fff';ctx.fillRect(0,0,520,780);
-  ctx.strokeStyle=t.deco;ctx.lineWidth=4;ctx.strokeRect(25,25,450,730);
+  // 520x780 원본 디자인을 축소하지 않고 중앙 기준으로 450x750만 보이게 크롭
+  ctx.setTransform(1,0,0,1,0,0);
+  ctx.clearRect(0,0,450,750);
 
+  ctx.save();
+  ctx.translate(-35,-15);
 
+  ctx.fillStyle='#fff';
+  ctx.fillRect(0,0,520,780);
+
+  // 기존 카드 테두리는 제거
   drawPhotoInCircle();
 
   ctx.textAlign='center';ctx.textBaseline='alphabetic';ctx.fillStyle=t.main;
@@ -281,6 +287,8 @@ function drawCard(){
   if(fixedDecor.complete && fixedDecor.naturalWidth){
     ctx.drawImage(fixedDecor,10,-10,500,800);
   }
+
+  ctx.restore();
 }
 
 async function ensureFonts(){
@@ -341,7 +349,10 @@ function pointerToCanvas(e){
   const rect=canvas.getBoundingClientRect();
   const clientX=e.touches?e.touches[0].clientX:e.clientX;
   const clientY=e.touches?e.touches[0].clientY:e.clientY;
-  return{x:(clientX-rect.left)*(canvas.width/rect.width),y:(clientY-rect.top)*(canvas.height/rect.height)};
+  return{
+    x:(clientX-rect.left)*(canvas.width/rect.width)+35,
+    y:(clientY-rect.top)*(canvas.height/rect.height)+15
+  };
 }
 function insidePhotoCircle(p){
   const dx=p.x-photoCircle.cx,dy=p.y-photoCircle.cy;
