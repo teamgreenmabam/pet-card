@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>우리 아이 카드 만들기</title>
+<style>
+:root{--green:#4e9a36;--yellow:#ffd52a;--bg:#f7f8f3;--text:#24311f}
+*{box-sizing:border-box}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans KR",Arial,sans-serif;background:var(--bg);color:var(--text)}
+.wrap{width:min(980px,100%);margin:0 auto;padding:24px}
+h1{text-align:center;margin:0 0 8px;font-size:clamp(28px,5vw,42px)}
+.sub{text-align:center;color:#6e7668;margin:0 0 24px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:start}
+.panel{background:#fff;border-radius:24px;padding:22px;box-shadow:0 10px 30px rgba(0,0,0,.07)}
+label{display:block;font-weight:700;margin:16px 0 7px}
+input,select{width:100%;padding:13px 14px;border:1px solid #d9ddd5;border-radius:12px;font-size:16px;background:#fff}
+input[type=file]{padding:10px}
+.btn{width:100%;border:0;border-radius:14px;padding:15px;font-size:17px;font-weight:800;cursor:pointer;margin-top:18px}
+.primary{background:var(--green);color:#fff}
+.secondary{background:var(--yellow);color:#2d4e20}
+canvas{display:block;width:100%;height:auto;background:#fff;border-radius:18px}
+.note{font-size:13px;line-height:1.55;color:#777;margin-top:12px}
+@media(max-width:760px){.grid{grid-template-columns:1fr}.wrap{padding:14px}}
+</style>
+</head>
+<body>
+<main class="wrap">
+<h1>🐾 우리 아이 카드 만들기</h1>
+<p class="sub">사진과 글만 넣으면 자동으로 카드가 만들어져요.</p>
+<div class="grid">
+<section class="panel">
+<label for="photo">사진</label>
+<input id="photo" type="file" accept="image/*">
+<label for="order">순서</label>
+<select id="order">
+<option>첫째</option><option>둘째</option><option>셋째</option><option>막내</option>
+</select>
+<label for="gender">성별</label>
+<select id="gender">
+<option value="♂">♂ 수컷</option>
+<option value="♀">♀ 암컷</option>
+<option value="?">? 모름/미정</option>
+</select>
+<label for="name">이름</label>
+<input id="name" type="text" placeholder="예: 깜순" value="깜순" maxlength="10">
+<label for="species">종류</label>
+<input id="species" type="text" placeholder="예: 크레스티드 게코" value="크레스티드 게코" maxlength="24">
+<label for="birthday">생일</label>
+<input id="birthday" type="text" placeholder="예: 24.12.31" value="24.12.31" maxlength="16">
+<label for="adoption">입양일</label>
+<input id="adoption" type="text" placeholder="예: 25.06.29" value="25.06.29" maxlength="16">
+<button class="btn primary" id="makeBtn">✨ 카드 만들기</button>
+<button class="btn secondary" id="downloadBtn">이미지 저장하기</button>
+<p class="note">사진은 서버에 저장하지 않고 현재 브라우저 안에서만 사용됩니다.</p>
+</section>
+<section class="panel">
+<canvas id="card" width="730" height="730"></canvas>
+</section>
+</div>
+</main>
+<script>
+const canvas=document.getElementById('card');
+const ctx=canvas.getContext('2d');
+const photoInput=document.getElementById('photo');
+const nameInput=document.getElementById('name');
+const birthdayInput=document.getElementById('birthday');
+const adoptionInput=document.getElementById('adoption');
+const orderInput=document.getElementById('order');
+const genderInput=document.getElementById('gender');
+const speciesInput=document.getElementById('species');
+let petImage=null;
+
+function drawStar(x,y,r1,r2,points=8){
+  ctx.save(); ctx.beginPath();
+  for(let i=0;i<points*2;i++){
+    const a=-Math.PI/2+i*Math.PI/points;
+    const r=i%2===0?r1:r2;
+    const px=x+Math.cos(a)*r, py=y+Math.sin(a)*r;
+    if(i===0)ctx.moveTo(px,py);else ctx.lineTo(px,py);
+  }
+  ctx.closePath(); ctx.strokeStyle='#9be130'; ctx.lineWidth=3; ctx.stroke(); ctx.restore();
+}
+
+function coverCrop(img,x,y,w,h){
+  const ir=img.width/img.height, rr=w/h;
+  let sx,sy,sw,sh;
+  if(ir>rr){sh=img.height;sw=sh*rr;sx=(img.width-sw)/2;sy=0;}
+  else{sw=img.width;sh=sw/rr;sx=0;sy=(img.height-sh)/2;}
+  ctx.drawImage(img,sx,sy,sw,sh,x,y,w,h);
+}
+
+function fitText(text,maxWidth,startSize,minSize){
+  let size=startSize;
+  while(size>minSize){
+    ctx.font=`800 ${size}px Arial`;
+    if(ctx.measureText(text).width<=maxWidth)break;
+    size--;
+  }
+  return size;
+}
+
+function drawCard(){
+  const name=nameInput.value.trim()||'이름';
+  const birthday=birthdayInput.value.trim()||'--.--.--';
+  const adoption=adoptionInput.value.trim()||'--.--.--';
+  const order=orderInput.value;
+  const gender=genderInput.value;
+  const species=speciesInput.value.trim()||'종류';
+  ctx.clearRect(0,0,730,730);
+  ctx.fillStyle='#fff';ctx.fillRect(0,0,730,730);
+
+  const cx=325,cy=310,r=220;
+  ctx.save();ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);ctx.clip();
+  if(petImage)coverCrop(petImage,cx-r,cy-r,r*2,r*2);
+  else{
+    ctx.fillStyle='#ecefe8';ctx.fillRect(cx-r,cy-r,r*2,r*2);
+    ctx.fillStyle='#9aa294';ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.font='700 30px Arial';ctx.fillText('사진을 넣어주세요',cx,cy);
+  }
+  ctx.restore();
+  ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);
+  ctx.strokeStyle='#2f8426';ctx.lineWidth=6;ctx.stroke();
+
+  drawStar(520,100,37,9,8);drawStar(480,245,28,7,8);drawStar(625,220,24,6,8);
+
+  ctx.fillStyle='#ffd52a';ctx.beginPath();ctx.ellipse(444,487,48,34,0,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#fff';ctx.textAlign='center';ctx.textBaseline='middle';ctx.font='800 24px Arial';ctx.fillText(order,444,489);
+
+  ctx.textAlign='left';ctx.textBaseline='alphabetic';ctx.fillStyle='#4e9a36';
+  const nameWithGender=name+' '+gender;
+  const ns=fitText(nameWithGender,250,60,34);ctx.font=`800 ${ns}px Arial`;ctx.fillText(nameWithGender,445,555);
+
+  ctx.fillStyle='#6d7568';
+  const ss=fitText(species,245,22,15);ctx.font=`700 ${ss}px Arial`;ctx.fillText(species,450,588);
+
+  ctx.font='800 26px Arial';ctx.fillStyle='#65ae43';ctx.fillText('생일:',450,630);
+  ctx.fillStyle='#ffd11a';ctx.fillText(birthday,520,630);
+  ctx.fillStyle='#65ae43';ctx.fillText('입양:',450,670);
+  ctx.fillStyle='#ffd11a';ctx.fillText(adoption,520,670);
+
+  ctx.save();ctx.strokeStyle='#ffd72d';ctx.lineWidth=4;ctx.lineCap='round';
+  ctx.beginPath();ctx.moveTo(0,525);ctx.lineTo(115,455);ctx.moveTo(0,558);ctx.lineTo(128,482);ctx.moveTo(15,590);ctx.lineTo(145,515);ctx.stroke();
+  ctx.restore();
+}
+
+photoInput.addEventListener('change',e=>{
+  const file=e.target.files[0]; if(!file)return;
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    const img=new Image();
+    img.onload=()=>{petImage=img;drawCard();};
+    img.src=ev.target.result;
+  };
+  reader.readAsDataURL(file);
+});
+
+[nameInput,birthdayInput,adoptionInput,orderInput,genderInput,speciesInput].forEach(el=>{
+  el.addEventListener('input',drawCard);
+  el.addEventListener('change',drawCard);
+});
+document.getElementById('makeBtn').addEventListener('click',drawCard);
+document.getElementById('downloadBtn').addEventListener('click',()=>{
+  drawCard();
+  const a=document.createElement('a');
+  const safe=(nameInput.value.trim()||'pet-card').replace(/[\\/:*?"<>|]/g,'_');
+  a.download=safe+'_card.png';
+  a.href=canvas.toDataURL('image/png');
+  a.click();
+});
+drawCard();
+</script>
+</body>
+</html>
