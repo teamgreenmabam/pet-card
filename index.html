@@ -242,7 +242,7 @@ function drawCard(){
   drawPhotoInCircle();
 
   ctx.textAlign='center';ctx.textBaseline='alphabetic';ctx.fillStyle=t.main;
-  const spSize=fit(species,310,29,18,'GangwonEduPower',800);
+  const spSize=fit(species,310,27,16,'GangwonEduPower',800);
   ctx.font=`800 ${spSize}px "GangwonEduPower", sans-serif`;
   ctx.fillText(species,260,502);
 
@@ -275,10 +275,10 @@ function drawCard(){
 
   ctx.textAlign='left';ctx.textBaseline='alphabetic';ctx.fillStyle=t.text;
   ctx.font=`700 27px "GangwonEduAll"`;
-  ctx.fillText('생일:',165,632);
-  ctx.fillText('입양:',165,672);
-  ctx.fillText(birthday,235,632);
-  ctx.fillText(adoption,235,672);
+  ctx.fillText('생일:',170,632);
+  ctx.fillText('입양:',170,672);
+  ctx.fillText(birthday,240,632);
+  ctx.fillText(adoption,240,672);
 
   // 테마별로 색이 바뀌는 장식 PNG
   drawThemeDecor();
