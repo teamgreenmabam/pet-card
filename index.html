@@ -109,7 +109,7 @@
 
     <section class="panel canvas-wrap">
       <div class="tip">사진을 넣은 뒤 원형 사진 안을 마우스 또는 손가락으로 끌면 위치를 옮길 수 있어요.</div>
-      <canvas id="card" width="450" height="750"></canvas>
+      <canvas id="card" width="450" height="740"></canvas>
     </section>
   </div>
 </main>
@@ -235,10 +235,10 @@ function drawCard(){
 
   // 520x780 원본 디자인을 축소하지 않고 중앙 기준으로 450x750만 보이게 크롭
   ctx.setTransform(1,0,0,1,0,0);
-  ctx.clearRect(0,0,450,750);
+  ctx.clearRect(0,0,450,740);
 
   ctx.save();
-  ctx.translate(-35,-20);
+  ctx.translate(-35,-30);
 
   ctx.fillStyle='#fff';
   ctx.fillRect(0,0,520,780);
@@ -362,7 +362,7 @@ function pointerToCanvas(e){
   const clientY=e.touches?e.touches[0].clientY:e.clientY;
   return{
     x:(clientX-rect.left)*(canvas.width/rect.width)+35,
-    y:(clientY-rect.top)*(canvas.height/rect.height)+20
+    y:(clientY-rect.top)*(canvas.height/rect.height)+30
   };
 }
 function insidePhotoCircle(p){
