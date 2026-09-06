@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>우리 아이 카드 만들기</title>
+<style>
+  @font-face{
+    font-family:"GangwonTtonton";
+    src:url("./ttonton.ttf") format("truetype");
+    font-weight:800;
+    font-style:normal;
+  }
+  @font-face{
+    font-family:"GangwonModu";
+    src:url("./modu-bold.ttf") format("truetype");
+    font-weight:700;
+    font-style:normal;
+  }
+
+  :root{
+    --ui-green:#4a9d4a;
+    --bg:#f7f8f4;
+    --text:#263326;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans KR",Arial,sans-serif;
+    background:var(--bg);
+    color:var(--text);
+  }
+  .wrap{width:min(1100px,100%);margin:0 auto;padding:24px}
+  h1{text-align:center;margin:0 0 8px;font-size:clamp(28px,5vw,44px)}
+  .sub{text-align:center;color:#6f786b;margin:0 0 26px}
+  .grid{display:grid;grid-template-columns:370px minmax(0,1fr);gap:26px;align-items:start}
+  .panel{background:#fff;border-radius:22px;padding:22px;box-shadow:0 12px 30px rgba(0,0,0,.07)}
+  label{display:block;margin:16px 0 7px;font-weight:800}
+  input,select{width:100%;padding:13px 14px;border:1px solid #d9ddd5;border-radius:12px;background:#fff;font-size:16px}
+  input[type="file"]{padding:10px}
+  input[type="range"]{padding:0}
+  .btn{width:100%;border:0;border-radius:14px;padding:15px 16px;font-size:17px;font-weight:800;cursor:pointer;margin-top:18px}
+  .primary{background:#4a9d4a;color:white}
+  .secondary{background:#f6c93d;color:#2c4a2c}
+  .light{background:#eef3ea;color:#40513f;margin-top:10px}
+  .canvas-wrap{display:flex;justify-content:center;flex-direction:column;align-items:center}
+  canvas{width:min(100%,560px);height:auto;background:white;box-shadow:0 10px 30px rgba(0,0,0,.08);touch-action:none;cursor:grab}
+  canvas.dragging{cursor:grabbing}
+  .note{margin-top:12px;color:#7d8578;font-size:13px;line-height:1.5}
+  .tip{margin:0 0 12px;width:min(100%,560px);background:#eef8e8;border:1px solid #cfe8c7;color:#496047;border-radius:12px;padding:10px 12px;font-size:14px;line-height:1.5}
+  .range-row{display:flex;align-items:center;gap:10px}
+  .range-row span{min-width:48px;text-align:right;color:#687065;font-weight:700}
+
+  .themes{
+    display:grid;
+    grid-template-columns:repeat(5,1fr);
+    gap:8px;
+  }
+  .theme-btn{
+    border:2px solid transparent;
+    border-radius:14px;
+    padding:8px 4px 7px;
+    background:#f7f7f7;
+    cursor:pointer;
+    font-size:12px;
+    font-weight:800;
+  }
+  .theme-btn.active{
+    border-color:#2e382e;
+    box-shadow:0 0 0 2px #fff inset;
+  }
+  .swatch{
+    width:30px;height:30px;border-radius:50%;
+    margin:0 auto 5px;
+    box-shadow:inset 0 0 0 1px rgba(0,0,0,.08);
+  }
+
+  @media(max-width:820px){
+    .grid{grid-template-columns:1fr}
+    .wrap{padding:14px}
+  }
+</style>
+</head>
+<body>
+<main class="wrap">
+  <h1>🐾 우리 아이 카드 만들기</h1>
+  <p class="sub">사진과 정보를 입력하고 원하는 테마색을 골라보세요.</p>
+
+  <div class="grid">
+    <section class="panel">
+
+      <label>테마색</label>
+      <div class="themes" id="themes">
+        <button class="theme-btn active" data-theme="green">
+          <div class="swatch" style="background:#62c85d"></div>초록
+        </button>
+        <button class="theme-btn" data-theme="pink">
+          <div class="swatch" style="background:#ef8fa8"></div>핑크
+        </button>
+        <button class="theme-btn" data-theme="blue">
+          <div class="swatch" style="background:#75aee8"></div>파랑
+        </button>
+        <button class="theme-btn" data-theme="purple">
+          <div class="swatch" style="background:#a58bd8"></div>보라
+        </button>
+        <button class="theme-btn" data-theme="yellow">
+          <div class="swatch" style="background:#f0c64c"></div>노랑
+        </button>
+      </div>
+
+      <label for="photo">사진</label>
+      <input id="photo" type="file" accept="image/*">
+
+      <label for="zoom">사진 확대/축소</label>
+      <div class="range-row">
+        <input id="zoom" type="range" min="1" max="3" step="0.01" value="1">
+        <span id="zoomValue">100%</span>
+      </div>
+
+      <button id="resetPhotoBtn" class="btn light">사진 위치 초기화</button>
+
+      <label for="name">이름</label>
+      <input id="name" type="text" value="버니" placeholder="예: 버니" maxlength="10">
+
+      <label for="gender">성별</label>
+      <select id="gender">
+        <option value="♂">♂ 수컷</option>
+        <option value="♀" selected>♀ 암컷</option>
+        <option value="?">? 모름/미정</option>
+      </select>
+
+      <label for="species">종류</label>
+      <input id="species" type="text" value="크레스티드 게코" placeholder="예: 크레스티드 게코" maxlength="24">
+
+      <label for="birthday">생일</label>
+      <input id="birthday" type="text" value="24.08.23" placeholder="예: 24.08.23" maxlength="16">
+
+      <label for="adoption">입양일</label>
+      <input id="adoption" type="text" value="25.06.29" placeholder="예: 25.06.29" maxlength="16">
+
+      <button id="makeBtn" class="btn primary">✨ 카드 만들기</button>
+      <button id="downloadBtn" class="btn secondary">이미지 저장하기</button>
+
+      <p class="note">※ 이름·종류는 ‘강원교육튼튼’, 생일·입양일은 ‘강원교육모두 Bold’를 사용합니다.<br>
+      ※ GitHub에는 이 index.html과 폰트 파일 2개를 같은 폴더에 올려주세요.</p>
+    </section>
+
+    <section class="panel canvas-wrap">
+      <div class="tip">사진을 넣은 뒤 원형 사진 안을 마우스 또는 손가락으로 끌면 위치를 옮길 수 있어요.</div>
+      <canvas id="card" width="520" height="780"></canvas>
+    </section>
+  </div>
+</main>
+
+<script>
+const canvas = document.getElementById('card');
+const ctx = canvas.getContext('2d');
+
+const photoInput = document.getElementById('photo');
+const nameInput = document.getElementById('name');
+const genderInput = document.getElementById('gender');
+const speciesInput = document.getElementById('species');
+const birthdayInput = document.getElementById('birthday');
+const adoptionInput = document.getElementById('adoption');
+const zoomInput = document.getElementById('zoom');
+const zoomValue = document.getElementById('zoomValue');
+
+const themes = {
+  green:{
+    main:'#62c85d',
+    soft:'#e4f5cc',
+    text:'#9b6b59',
+    accent:'#ffd23f',
+    deco:'#9bd87f'
+  },
+  pink:{
+    main:'#ef8fa8',
+    soft:'#fde0e8',
+    text:'#8f5e68',
+    accent:'#ffd166',
+    deco:'#f4b4c5'
+  },
+  blue:{
+    main:'#75aee8',
+    soft:'#dcecff',
+    text:'#5f6e88',
+    accent:'#ffd45a',
+    deco:'#9fc7ef'
+  },
+  purple:{
+    main:'#a58bd8',
+    soft:'#ebe3fa',
+    text:'#756187',
+    accent:'#ffd15a',
+    deco:'#c3afe8'
+  },
+  yellow:{
+    main:'#f0c64c',
+    soft:'#fff2bf',
+    text:'#8c6d3f',
+    accent:'#86c96a',
+    deco:'#f4d878'
+  }
+};
+
+let currentTheme = 'green';
+let petImage = null;
+let photoOffsetX = 0;
+let photoOffsetY = 0;
+let zoom = 1;
+
+const photoCircle = {cx:260,cy:290,r:148};
+
+function getBaseCoverSize(img,w,h){
+  const ir=img.width/img.height;
+  const rr=w/h;
+  let drawW,drawH;
+  if(ir>rr){drawH=h;drawW=h*ir;}
+  else{drawW=w;drawH=w/ir;}
+  return {drawW,drawH};
+}
+
+function drawPhotoInCircle(){
+  const t=themes[currentTheme];
+  const {cx,cy,r}=photoCircle;
+  const size=r*2;
+
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(cx,cy,r,0,Math.PI*2);
+  ctx.clip();
+
+  if(petImage){
+    const base=getBaseCoverSize(petImage,size,size);
+    const drawW=base.drawW*zoom;
+    const drawH=base.drawH*zoom;
+    const x=cx-drawW/2+photoOffsetX;
+    const y=cy-drawH/2+photoOffsetY;
+    ctx.drawImage(petImage,x,y,drawW,drawH);
+  }else{
+    ctx.fillStyle='#ecefe9';
+    ctx.fillRect(cx-r,cy-r,size,size);
+    ctx.fillStyle='#98a090';
+    ctx.textAlign='center';
+    ctx.textBaseline='middle';
+    ctx.font='700 24px Arial';
+    ctx.fillText('사진을 넣어주세요',cx,cy);
+  }
+  ctx.restore();
+
+  ctx.beginPath();
+  ctx.arc(cx,cy,r,0,Math.PI*2);
+  ctx.strokeStyle=t.main;
+  ctx.lineWidth=6;
+  ctx.stroke();
+}
+
+function fitFont(text,maxWidth,startSize,minSize,fontFamily,weight='800'){
+  let size=startSize;
+  while(size>minSize){
+    ctx.font=`${weight} ${size}px "${fontFamily}", sans-serif`;
+    if(ctx.measureText(text).width<=maxWidth) break;
+    size--;
+  }
+  return size;
+}
+
+function drawLoop(x,y,scale=1){
+  const t=themes[currentTheme];
+  ctx.save();
+  ctx.strokeStyle=t.deco;
+  ctx.lineWidth=4*scale;
+  ctx.lineCap='round';
+  ctx.beginPath();
+  ctx.moveTo(x,y);
+  ctx.bezierCurveTo(x-35*scale,y+35*scale,x+10*scale,y+55*scale,x+30*scale,y+18*scale);
+  ctx.bezierCurveTo(x+45*scale,y-10*scale,x+20*scale,y-25*scale,x-5*scale,y-5*scale);
+  ctx.stroke();
+  ctx.restore();
+}
+
+function drawSpark(x,y,scale=1){
+  const t=themes[currentTheme];
+  ctx.save();
+  ctx.fillStyle=t.accent;
+  ctx.translate(x,y);
+  ctx.rotate(-0.15);
+  ctx.beginPath();
+  for(let i=0;i<8;i++){
+    const a=i*Math.PI/4;
+    const r=i%2===0?18*scale:7*scale;
+    const px=Math.cos(a)*r, py=Math.sin(a)*r;
+    if(i===0)ctx.moveTo(px,py);else ctx.lineTo(px,py);
+  }
+  ctx.closePath();
+  ctx.fill();
+  ctx.restore();
+}
+
+function drawLeaf(x,y,flip=false){
+  const t=themes[currentTheme];
+  ctx.save();
+  ctx.translate(x,y);
+  if(flip)ctx.scale(-1,1);
+  ctx.fillStyle=t.deco;
+  ctx.beginPath();
+  ctx.ellipse(-8,0,8,18,-0.7,0,Math.PI*2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.ellipse(8,5,8,18,0.7,0,Math.PI*2);
+  ctx.fill();
+  ctx.restore();
+}
+
+function drawCard(){
+  const t=themes[currentTheme];
+  const name=nameInput.value.trim()||'이름';
+  const gender=genderInput.value;
+  const species=speciesInput.value.trim()||'종류';
+  const birthday=birthdayInput.value.trim()||'--.--.--';
+  const adoption=adoptionInput.value.trim()||'--.--.--';
+
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  ctx.fillStyle='#fff';
+  ctx.fillRect(0,0,520,780);
+
+  ctx.strokeStyle=t.deco;
+  ctx.lineWidth=4;
+  ctx.strokeRect(25,25,450,730);
+
+  drawLoop(105,55,1);
+  drawSpark(190,110,.8);
+  drawSpark(395,120,.7);
+
+  ctx.save();
+  ctx.strokeStyle=t.accent;
+  ctx.lineWidth=8;
+  ctx.lineCap='round';
+  [[390,85,400,68],[412,99,427,86],[425,120,445,116]].forEach(a=>{
+    ctx.beginPath();ctx.moveTo(a[0],a[1]);ctx.lineTo(a[2],a[3]);ctx.stroke();
+  });
+  ctx.restore();
+
+  drawPhotoInCircle();
+
+  // 종류 - 강원교육튼튼
+  ctx.textAlign='center';
+  ctx.textBaseline='alphabetic';
+  ctx.fillStyle=t.main;
+  const spSize=fitFont(species,310,29,18,'GangwonTtonton','800');
+  ctx.font=`800 ${spSize}px "GangwonTtonton", sans-serif`;
+  ctx.fillText(species,260,505);
+
+  // 이름 배경
+  const nameSize=fitFont(name,220,58,34,'GangwonTtonton','800');
+  ctx.font=`800 ${nameSize}px "GangwonTtonton", sans-serif`;
+  const nameW=ctx.measureText(name).width;
+  ctx.font=`800 ${nameSize}px Arial`;
+  const genderW=ctx.measureText(gender).width;
+  const boxW=Math.max(180,nameW+genderW+48);
+
+  ctx.fillStyle=t.soft;
+  ctx.beginPath();
+  ctx.roundRect(260-boxW/2,520,boxW,72,18);
+  ctx.fill();
+
+  // 이름 - 강원교육튼튼
+  ctx.font=`800 ${nameSize}px "GangwonTtonton", sans-serif`;
+  const groupW=nameW+genderW+10;
+  const startX=260-groupW/2;
+  ctx.textAlign='left';
+  ctx.textBaseline='middle';
+  ctx.fillStyle=t.text;
+  ctx.fillText(name,startX,556);
+
+  // 성별기호는 테마 메인색
+  ctx.font=`800 ${Math.max(34,nameSize-4)}px Arial`;
+  ctx.fillStyle=t.main;
+  ctx.fillText(gender,startX+nameW+10,556);
+
+  // 생일/입양 - 강원교육모두 Bold
+  ctx.textAlign='left';
+  ctx.textBaseline='alphabetic';
+  ctx.fillStyle=t.text;
+  ctx.font=`700 27px "GangwonModu", sans-serif`;
+  ctx.fillText('생일:',165,635);
+  ctx.fillText('입양:',165,675);
+  ctx.fillText(birthday,235,635);
+  ctx.fillText(adoption,235,675);
+
+  drawLeaf(410,645,false);
+  drawLeaf(400,690,true);
+  drawLoop(420,715,1.2);
+
+  ctx.save();
+  ctx.strokeStyle=t.deco;
+  ctx.lineWidth=4;
+  ctx.beginPath();
+  ctx.moveTo(305,780);
+  ctx.bezierCurveTo(330,715,395,665,520,665);
+  ctx.stroke();
+  ctx.restore();
+}
+
+document.querySelectorAll('.theme-btn').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('.theme-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    currentTheme=btn.dataset.theme;
+    drawCard();
+  });
+});
+
+photoInput.addEventListener('change',e=>{
+  const file=e.target.files[0];
+  if(!file)return;
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    const img=new Image();
+    img.onload=()=>{
+      petImage=img;
+      photoOffsetX=0;
+      photoOffsetY=0;
+      zoom=1;
+      zoomInput.value='1';
+      zoomValue.textContent='100%';
+      drawCard();
+    };
+    img.src=ev.target.result;
+  };
+  reader.readAsDataURL(file);
+});
+
+zoomInput.addEventListener('input',()=>{
+  zoom=parseFloat(zoomInput.value);
+  zoomValue.textContent=Math.round(zoom*100)+'%';
+  drawCard();
+});
+
+document.getElementById('resetPhotoBtn').addEventListener('click',()=>{
+  photoOffsetX=0;photoOffsetY=0;zoom=1;
+  zoomInput.value='1';zoomValue.textContent='100%';
+  drawCard();
+});
+
+[nameInput,genderInput,speciesInput,birthdayInput,adoptionInput].forEach(el=>{
+  el.addEventListener('input',drawCard);
+  el.addEventListener('change',drawCard);
+});
+
+document.getElementById('makeBtn').addEventListener('click',drawCard);
+
+document.getElementById('downloadBtn').addEventListener('click',async()=>{
+  await document.fonts.ready;
+  drawCard();
+  const safe=(nameInput.value.trim()||'pet-card').replace(/[\\/:*?"<>|]/g,'_');
+  const a=document.createElement('a');
+  a.download=safe+'_card.png';
+  a.href=canvas.toDataURL('image/png');
+  a.click();
+});
+
+function pointerToCanvas(e){
+  const rect=canvas.getBoundingClientRect();
+  const clientX=e.touches?e.touches[0].clientX:e.clientX;
+  const clientY=e.touches?e.touches[0].clientY:e.clientY;
+  return {
+    x:(clientX-rect.left)*(canvas.width/rect.width),
+    y:(clientY-rect.top)*(canvas.height/rect.height)
+  };
+}
+function insidePhotoCircle(p){
+  const dx=p.x-photoCircle.cx,dy=p.y-photoCircle.cy;
+  return dx*dx+dy*dy<=photoCircle.r*photoCircle.r;
+}
+let dragging=false,lastPoint=null;
+
+function startDrag(e){
+  if(!petImage)return;
+  const p=pointerToCanvas(e);
+  if(!insidePhotoCircle(p))return;
+  dragging=true;lastPoint=p;canvas.classList.add('dragging');e.preventDefault();
+}
+function moveDrag(e){
+  if(!dragging)return;
+  const p=pointerToCanvas(e);
+  photoOffsetX+=p.x-lastPoint.x;
+  photoOffsetY+=p.y-lastPoint.y;
+  lastPoint=p;
+  drawCard();
+  e.preventDefault();
+}
+function endDrag(){
+  dragging=false;lastPoint=null;canvas.classList.remove('dragging');
+}
+
+canvas.addEventListener('mousedown',startDrag);
+window.addEventListener('mousemove',moveDrag);
+window.addEventListener('mouseup',endDrag);
+canvas.addEventListener('touchstart',startDrag,{passive:false});
+canvas.addEventListener('touchmove',moveDrag,{passive:false});
+window.addEventListener('touchend',endDrag);
+
+Promise.all([
+  document.fonts.load('800 40px "GangwonTtonton"'),
+  document.fonts.load('700 30px "GangwonModu"')
+]).then(drawCard).catch(drawCard);
+
+document.fonts.ready.then(drawCard);
+drawCard();
+</script>
+</body>
+</html>
