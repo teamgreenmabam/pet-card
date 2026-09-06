@@ -249,7 +249,7 @@ function drawCard(){
   ctx.textAlign='center';ctx.textBaseline='alphabetic';ctx.fillStyle=t.main;
   const spSize=fit(species,310,27,16,'GangwonEduPower',800);
   ctx.font=`800 ${spSize}px "GangwonEduPower", sans-serif`;
-  ctx.fillText(species,260,502);
+  ctx.fillText(species,260,500);
 
   const nameSize=fit(name,220,58,34,'GangwonEduPower',800);
   ctx.font=`800 ${nameSize}px "GangwonEduPower", sans-serif`;
@@ -269,7 +269,7 @@ function drawCard(){
   const nameMetrics=ctx.measureText(name || '가');
   const ascent=nameMetrics.actualBoundingBoxAscent || nameSize*0.72;
   const descent=nameMetrics.actualBoundingBoxDescent || nameSize*0.18;
-  const baselineY=555+(ascent-descent)/2+6;
+  const baselineY=553+(ascent-descent)/2+6;
 
   ctx.textAlign='left';ctx.textBaseline='alphabetic';ctx.fillStyle=t.text;
   ctx.font=`800 ${nameSize}px "GangwonEduPower", sans-serif`;
@@ -286,10 +286,10 @@ function drawCard(){
     ctx.fillText(text,x,y);
     ctx.fillText(text,x+0.6,y);
   };
-  drawDateBold('생일:',174,631);
-  drawDateBold('입양:',174,669);
-  drawDateBold(birthday,244,631);
-  drawDateBold(adoption,244,669);
+  drawDateBold('생일:',174,629);
+  drawDateBold('입양:',174,667);
+  drawDateBold(birthday,244,629);
+  drawDateBold(adoption,244,667);
 
   // 테마별로 색이 바뀌는 장식 PNG
   drawThemeDecor();
