@@ -86,6 +86,7 @@
 
       <label for="gender">성별</label>
       <select id="gender">
+        <option value="">공란</option>
         <option value="♂">♂ 수컷</option>
         <option value="♀" selected>♀ 암컷</option>
         <option value="?">? 모름/미정</option>
@@ -264,7 +265,7 @@ function drawCard(){
   const nameMetrics=ctx.measureText(name || '가');
   const ascent=nameMetrics.actualBoundingBoxAscent || nameSize*0.72;
   const descent=nameMetrics.actualBoundingBoxDescent || nameSize*0.18;
-  const baselineY=553+(ascent-descent)/2+6;
+  const baselineY=555+(ascent-descent)/2+6;
 
   ctx.textAlign='left';ctx.textBaseline='alphabetic';ctx.fillStyle=t.text;
   ctx.font=`800 ${nameSize}px "GangwonEduPower", sans-serif`;
