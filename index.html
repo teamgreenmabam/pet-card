@@ -263,7 +263,7 @@ function drawCard(){
   const gap=5;
   const groupW=nameW+genderW+gap;
   const opticalX=5;
-  const startX=260-groupW/2+opticalX;
+  const startX=260-groupW/2+opticalX-3;
 
   ctx.font=`800 ${nameSize}px "GangwonEduPower", sans-serif`;
   const nameMetrics=ctx.measureText(name || '가');
